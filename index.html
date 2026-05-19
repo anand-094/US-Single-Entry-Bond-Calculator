@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Single Entry Bond Calculator</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f1eb;
+    --surface: #ffffff;
+    --surface-2: #f8f6f1;
+    --border: #d6d0c4;
+    --border-strong: #b0a898;
+    --text: #1a1714;
+    --text-muted: #6b6459;
+    --text-hint: #9e9488;
+    --accent: #2d5a3d;
+    --accent-light: #e8f0ea;
+    --accent-text: #1e3d29;
+    --warn: #7a4f1a;
+    --warn-bg: #fdf3e3;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151210;
+      --surface: #1e1b18;
+      --surface-2: #252018;
+      --border: #332e28;
+      --border-strong: #4a4338;
+      --text: #f0ece4;
+      --text-muted: #9e9488;
+      --text-hint: #6b6459;
+      --accent: #5a9e6e;
+      --accent-light: #1a2e1e;
+      --accent-text: #8ecfa0;
+      --warn: #e0a050;
+      --warn-bg: #2a1e0a;
+    }
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+    max-width: 520px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 16px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field {
+    margin-bottom: 20px;
+  }
+
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.01em;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-prefix {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-hint);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .input-suffix {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-hint);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  input[type="number"], input[type="text"] {
+    width: 100%;
+    height: 46px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input.has-prefix { padding: 0 14px 0 30px; }
+  input.has-suffix { padding: 0 36px 0 14px; }
+  input.plain { padding: 0 14px; }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+
+  input.error { border-color: #c0392b; box-shadow: 0 0 0 3px #fdecea; }
+
+  .hint {
+    font-size: 11px;
+    color: var(--text-hint);
+    margin-top: 5px;
+    font-family: var(--mono);
+  }
+
+  .duty-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0;
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 16px;
+  }
+
+  .result-card.highlighted {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  .breakdown-row:last-child { border-bottom: none; }
+
+  .breakdown-label {
+    color: var(--text-muted);
+  }
+
+  .breakdown-value {
+    font-family: var(--mono);
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .breakdown-value.accent {
+    color: var(--accent);
+  }
+
+  .seb-label {
+    font-size: 12px;
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: 8px;
+  }
+
+  .seb-amount {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--accent-text);
+    line-height: 1;
+    font-family: var(--sans);
+  }
+
+  .seb-sub {
+    font-size: 12px;
+    color: var(--accent-text);
+    opacity: 0.7;
+    margin-top: 8px;
+    font-family: var(--mono);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--text-hint);
+    font-size: 13px;
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+  }
+
+  .empty-state svg {
+    display: block;
+    margin: 0 auto 12px;
+    opacity: 0.3;
+  }
+
+  .info-box {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--warn);
+    font-family: var(--mono);
+    line-height: 1.6;
+    margin-top: 16px;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-hint);
+    font-family: var(--mono);
+    margin-top: 8px;
+    max-width: 520px;
+  }
+
+  @media (max-width: 480px) {
+    .duty-row { grid-template-columns: 1fr; }
+    h1 { font-size: 22px; }
+    .seb-amount { font-size: 38px; }
+    .card, .result-card { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">U.S. Customs &amp; Border Protection</div>
+  <h1>Single Entry Bond<br />Calculator</h1>
+  <p>Estimate your SEB cost based on invoice value and applicable duty rates.</p>
+</header>
+
+<div class="card">
+  <div class="section-label">Shipment Inputs</div>
+
+  <div class="field">
+    <label for="invoice">Invoice Value</label>
+    <div class="input-wrap">
+      <span class="input-prefix">$</span>
+      <input type="number" id="invoice" class="has-prefix" min="0" step="0.01" placeholder="0.00" oninput="calculate()" />
+    </div>
+  </div>
+
+  <div class="duty-row">
+    <div class="field">
+      <label for="base-duty">Base Duty Rate</label>
+      <div class="input-wrap">
+        <input type="number" id="base-duty" class="has-suffix" min="0" max="100" step="0.01" value="15" oninput="calculate()" />
+        <span class="input-suffix">%</span>
+      </div>
+      <div class="hint">Default: 15%</div>
+    </div>
+
+    <div class="field">
+      <label for="commodity-duty">Duty for Commodity</label>
+      <div class="input-wrap">
+        <input type="number" id="commodity-duty" class="has-suffix" min="0" max="100" step="0.01" placeholder="0" oninput="calculate()" />
+        <span class="input-suffix">%</span>
+      </div>
+      <div class="hint">Additional rate</div>
+    </div>
+  </div>
+</div>
+
+<div class="result-card" id="result-section">
+  <div class="section-label">Output</div>
+  <div id="result-content">
+    <div class="empty-state">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="4" y="3" width="16" height="18" rx="2"/>
+        <line x1="8" y1="8" x2="16" y2="8"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+        <line x1="8" y1="16" x2="12" y2="16"/>
+      </svg>
+      Enter invoice value above to calculate
+    </div>
+  </div>
+</div>
+
+<div class="result-card highlighted" id="seb-section" style="display:none;">
+  <div class="seb-label">SEB Cost</div>
+  <div class="seb-amount" id="seb-display">$0.00</div>
+
+</div>
+
+
+
+<script>
+function fmt(n) {
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function calculate() {
+  const invoiceRaw = parseFloat(document.getElementById('invoice').value);
+  const baseDuty = parseFloat(document.getElementById('base-duty').value) || 0;
+  const commDuty = parseFloat(document.getElementById('commodity-duty').value) || 0;
+
+  const resultContent = document.getElementById('result-content');
+  const sebSection = document.getElementById('seb-section');
+
+  if (isNaN(invoiceRaw) || invoiceRaw <= 0) {
+    resultContent.innerHTML = `<div class="empty-state">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="4" y="3" width="16" height="18" rx="2"/>
+        <line x1="8" y1="8" x2="16" y2="8"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+        <line x1="8" y1="16" x2="12" y2="16"/>
+      </svg>
+      Enter invoice value above to calculate
+    </div>`;
+    sebSection.style.display = 'none';
+    return;
+  }
+
+  const invoice = invoiceRaw;
+  const totalDutyRate = (baseDuty + commDuty) / 100;
+  const totalDutyAmt = invoice * totalDutyRate;
+  const combined = invoice + totalDutyAmt;
+
+  let sebBase;
+  if (combined <= 10000) {
+    sebBase = 35;
+  } else {
+    const excess = combined - 10000;
+    const chunks = Math.ceil(excess / 1000);
+    sebBase = 35 + chunks * 2.5;
+  }
+
+  const margin = sebBase * 0.10;
+  const sebFinal = sebBase + margin;
+
+  resultContent.innerHTML = `
+    <div class="breakdown-row">
+      <span class="breakdown-label">Invoice Value</span>
+      <span class="breakdown-value">${fmt(invoice)}</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-label">Base Duty (${baseDuty.toFixed(2)}%)</span>
+      <span class="breakdown-value">${fmt(invoice * baseDuty / 100)}</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-label">Commodity Duty (${commDuty.toFixed(2)}%)</span>
+      <span class="breakdown-value">${fmt(invoice * commDuty / 100)}</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-label">Total Duty Amount</span>
+      <span class="breakdown-value">${fmt(totalDutyAmt)}</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-label" style="font-weight:500; color:var(--text)">Invoice + Total Duty</span>
+      <span class="breakdown-value accent">${fmt(combined)}</span>
+    </div>
+
+  `;
+
+  document.getElementById('seb-display').textContent = fmt(sebFinal);
+  sebSection.style.display = 'block';
+}
+</script>
+</body>
+</html>
