@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Single Entry Bond Calculator</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -207,6 +206,80 @@
     margin: 28px 0;
   }
 
+  /* FDA Toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 20px;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+  }
+
+  .toggle-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: color 0.2s;
+  }
+
+  .toggle-label span {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-hint);
+    margin-top: 3px;
+    letter-spacing: 0.04em;
+    transition: color 0.2s;
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border-strong);
+    border-radius: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+  .toggle-switch input:checked + .toggle-track::after { transform: translateX(22px); }
+
+  .toggle-row.fda-active {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .toggle-row.fda-active .toggle-label { color: var(--accent-text); }
+  .toggle-row.fda-active .toggle-label span { color: var(--accent-text); opacity: 0.7; }
+
+  /* Result */
   .result-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -233,9 +306,7 @@
 
   .breakdown-row:last-child { border-bottom: none; }
 
-  .breakdown-label {
-    color: var(--text-muted);
-  }
+  .breakdown-label { color: var(--text-muted); }
 
   .breakdown-value {
     font-family: var(--mono);
@@ -243,9 +314,7 @@
     color: var(--text);
   }
 
-  .breakdown-value.accent {
-    color: var(--accent);
-  }
+  .breakdown-value.accent { color: var(--accent); }
 
   .seb-label {
     font-size: 12px;
@@ -265,14 +334,6 @@
     font-family: var(--sans);
   }
 
-  .seb-sub {
-    font-size: 12px;
-    color: var(--accent-text);
-    opacity: 0.7;
-    margin-top: 8px;
-    font-family: var(--mono);
-  }
-
   .empty-state {
     text-align: center;
     padding: 32px 0;
@@ -286,27 +347,6 @@
     display: block;
     margin: 0 auto 12px;
     opacity: 0.3;
-  }
-
-  .info-box {
-    background: var(--warn-bg);
-    border: 1px solid var(--warn);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    font-size: 12px;
-    color: var(--warn);
-    font-family: var(--mono);
-    line-height: 1.6;
-    margin-top: 16px;
-  }
-
-  footer {
-    text-align: center;
-    font-size: 11px;
-    color: var(--text-hint);
-    font-family: var(--mono);
-    margin-top: 8px;
-    max-width: 520px;
   }
 
   @media (max-width: 480px) {
@@ -355,6 +395,17 @@
       <div class="hint">Additional rate</div>
     </div>
   </div>
+
+  <div class="toggle-row" id="fda-row" onclick="toggleFDA()">
+    <div class="toggle-label">
+      FDA Regulated Commodity
+      <span id="fda-status-text">No — standard bond basis</span>
+    </div>
+    <label class="toggle-switch" onclick="event.stopPropagation()">
+      <input type="checkbox" id="fda-toggle" onchange="toggleFDA()" />
+      <span class="toggle-track"></span>
+    </label>
+  </div>
 </div>
 
 <div class="result-card" id="result-section">
@@ -375,20 +426,38 @@
 <div class="result-card highlighted" id="seb-section" style="display:none;">
   <div class="seb-label">SEB Cost</div>
   <div class="seb-amount" id="seb-display">$0.00</div>
-
 </div>
-
-
 
 <script>
 function fmt(n) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function toggleFDA() {
+  const checkbox = document.getElementById('fda-toggle');
+  const row = document.getElementById('fda-row');
+  const statusText = document.getElementById('fda-status-text');
+
+  // If click came from the row (not the checkbox itself), flip it
+  if (event.target === row || event.target.classList.contains('toggle-label') || event.target.tagName === 'DIV') {
+    checkbox.checked = !checkbox.checked;
+  }
+
+  if (checkbox.checked) {
+    row.classList.add('fda-active');
+    statusText.textContent = 'Yes — bond basis: invoice × 3 + duty';
+  } else {
+    row.classList.remove('fda-active');
+    statusText.textContent = 'No — standard bond basis';
+  }
+  calculate();
+}
+
 function calculate() {
   const invoiceRaw = parseFloat(document.getElementById('invoice').value);
   const baseDuty = parseFloat(document.getElementById('base-duty').value) || 0;
   const commDuty = parseFloat(document.getElementById('commodity-duty').value) || 0;
+  const isFDA = document.getElementById('fda-toggle').checked;
 
   const resultContent = document.getElementById('result-content');
   const sebSection = document.getElementById('seb-section');
@@ -410,13 +479,15 @@ function calculate() {
   const invoice = invoiceRaw;
   const totalDutyRate = (baseDuty + commDuty) / 100;
   const totalDutyAmt = invoice * totalDutyRate;
-  const combined = invoice + totalDutyAmt;
+
+  // FDA: bond basis = (invoice × 3) + duty; Standard: invoice + duty
+  const bondBasis = isFDA ? (invoice * 3) + totalDutyAmt : invoice + totalDutyAmt;
 
   let sebBase;
-  if (combined <= 10000) {
+  if (bondBasis <= 10000) {
     sebBase = 35;
   } else {
-    const excess = combined - 10000;
+    const excess = bondBasis - 10000;
     const chunks = Math.ceil(excess / 1000);
     sebBase = 35 + chunks * 2.5;
   }
@@ -441,11 +512,15 @@ function calculate() {
       <span class="breakdown-label">Total Duty Amount</span>
       <span class="breakdown-value">${fmt(totalDutyAmt)}</span>
     </div>
+    ${isFDA ? `
+    <div class="breakdown-row">
+      <span class="breakdown-label">FDA Bond Basis (Invoice × 3 + Duty)</span>
+      <span class="breakdown-value accent">${fmt(bondBasis)}</span>
+    </div>` : `
     <div class="breakdown-row">
       <span class="breakdown-label" style="font-weight:500; color:var(--text)">Invoice + Total Duty</span>
-      <span class="breakdown-value accent">${fmt(combined)}</span>
-    </div>
-
+      <span class="breakdown-value accent">${fmt(bondBasis)}</span>
+    </div>`}
   `;
 
   document.getElementById('seb-display').textContent = fmt(sebFinal);
